@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tfd-database</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .filter-dropdown {
+            margin-bottom: 10px;
+        }
+        .filter-dropdown select {
+            padding: 6px 12px;
+            font-size: 14px;
+            border: none;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+        .filter-dropdown select:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <h1>tfd-database</h1>
+
+    <!-- Filter dropdown -->
+    <div class="filter-dropdown">
+        <select id="category-select" onchange="filterByCategory()">
+            <option value="All Materials/Items">All Materials</option>
+            <option value="Core Materials">Core Materials</option>
+            <option value="Basic Materials">Basic Materials</option>
+            <option value="Amorphous Material">Amorphous Material</option>
+            <option value="Auxiliary Power">Auxiliary Power</option>
+            <option value="Sensor">Sensor</option>
+            <option value="Memory">Memory</option>
+            <option value="Processor">Processor</option>
+            <option value="All External Components">All External Components</option>
+            <option value="General Rounds Modules">General Rounds Modules</option>
+            <option value="Special Rounds Modules">Special Rounds Modules</option>
+            <option value="Impact Rounds Modules">Impact Rounds Modules</option>
+            <option value="High-Power Rounds Modules">High-Power Rounds Modules</option>
+            <option value="All Modules">All Modules</option>
+            <option value="Descendants">Descendants</option>
+            <option value="Weapons">Weapons</option>
+            <option value="Enhancement Materials">Enhancement Materials</option>
+            <option value="Ultimate Weapons">Ultimate Weapons</option>
+        </select>
+    </div>
+
+    <!-- Table to display materials -->
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>Material Name</th>
+                <th>Rarity</th>
+                <th>Source</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <!-- Data will be inserted here dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        // Test data (replace with your actual data array)
+        const testData = [
+
+            {
+                "name": "Afterglow Sword",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "Even among the Descendants, there existed especially exceptional snipers. However, there was a lack of research on specialized weapons for these talented snipers. Only recently was a new weapon announced that contained many of the current technologies.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Albion Cavalry",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "When Albion first began fighting back against Vulgus, they were lacking in many areas. The only people who could even fight in battle were the surviving knights and soldiers. Humanity only began developing weapons in earnest once the Magisters joined Albion. The Albion forces decided to form a Special Cavalry using the surviving knights to carry out a high-speed mobile strike operation.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Blue Beetle",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "The newest of the .318 Magnum Round Scout Rifles, the 'Blue Beetle', was named for its unique appearance. Its brilliant appearance is due to its high pure gold content, which was used in an effort to increase the weapon's resistance to electric voltage. In particular, the weapon includes an Arche Emitter, which is the culmination of Albion's newest technologies.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Clairvoyance",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "The Beam Rifle is one of the new weapons that was developed. In particular, its ability to collect high levels of energy in one place and fire it all at once was a state-of-the-art technology that had never before been possible. The Colossus StunningBeauty's component is what made this technology possible.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Divine Punishment",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "The Magisters discovered its many effects as they reverse engineered this weapon, which originally belonged to the Vulgus Order of Truth. Of special note was the weapon called Divine Punishment. It displays the Order of Truth's special power by using Arche and materializing it in a similar form.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Enduring Legacy",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "Immediately after the apocalypse, before any decent weapons were developed, all humanity could do was seize Vulgus firearms. That's how humans ended up with this weapon's prototype. Countless knights were sacrificed to steal one Vulgus machine gun.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Executor",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "The Colossi's advanced technology provided endless inspiration not only for the Magisters but for all of Albion's researchers. In particular, Executioner was used in many studies that involved improving a weapon's performance through the use of electromagnetic force.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Fallen Hope",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "He was once a knight full of pride. But when he was relegated to a soldier after the apocalypse and was eventually reborn as a Descendant, he made a promise to himself. He would never forget the past that plunged him into a bleak, hopeless perdition. In order to remember his true identity, he inscribed the tenet of the Order of Knights into his firearm, named it 'Fallen Hope', and traveled from battlefield to battlefield.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Greg's Reversed Fate",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "Albion researched Vulgus firearms in order to develop new weapons. This firearm was also taken from Vulgus for research purposes.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Kingsguard's Lance",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "As Descendants began their work in earnest, humanity was able to expand their territory to beyond the land that had been taken from them. Among that land were the historical cities that once housed kingdoms.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Nazeistra's Devotion",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "According to the Magisters' records, Priestess Nazeistra of the Order of Truth was originally a Vulgus with a physical body. She led experiments to create and train new soldiers. She devoted herself so passionately to her research that she even experimented on her own body. She achieved remarkable results, ultimately gaining a new body and being reborn as a high priestess.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Perforator",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "As the war against Vulgus raged on, the need emerged for a powerful firearm that could pierce their impenetrable shields. The Magisters and weapon developers created a .456 Kuiper Bullet that had a higher lethality than other firearms. The weapon that worked best with this bullet was the 'Penetrator'.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Piercing Light",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "A chief consideration when developing a weapon to use with this new technology, called 'Dispel', was how accurately it could hit its target. In this regard, it was a matter of course that the sniper rifle used by the most skilled marksmen would be selected for the job.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Python",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "As the Magisters continued to research Arche, they also attempted to use related technologies to increase the Descendants' battle power. The miniaturized Arche Control System was used in modules, external components, and Ultimate Weapons.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Restored Relic",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "The Weapons Development Department's many tasks include not only the development and application of new technologies, but also the analysis and restoration of ancient technologies. There remained parts of the Ancestors' technology that were too advanced for today's scholars and Magisters to restore.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Secret Garden",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "It's known as the firearm that Albion's famous weapon developer created for the gardener who saved his life. In fact, the blueprint for this weapon was never revealed to the world. It was only discovered later, while someone was cleaning the Weapons Development Department storage area.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Sigvore's Proof",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "This firearm is the result of the sustained efforts of one Descendant who was obsessed with explosions.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Smithereens",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "The name 'Smithereens,' which may sound a bit odd for a firearm, was originally a nickname given to the weapon shortly after its development.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "The Final Masterpiece",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "Now, it is known as the product of an unnamed weapon developer's undying obsession. It's said he developed nothing else aside from his handgun. Nonetheless, this handgun is held in high esteem by many Descendants.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "The Last Dagger",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "The Last Dagger is a handgun the Magisters had in their possession when they first joined Albion. Despite using a small caliber ammunition, it gained massive power once electromagnetic acceleration barrel technology was applied to it. However, the reason this gun is called the Last Dagger is not simply due to its powerful force.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Thunder Cage",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "The 'Thunder Cage' is hailed as the most successful attempt at electrifying a technology used by the ancient Ancestors. It is a combination of the prototype of Bunny's suit technology and a submachine gun.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+                "name": "Wave of Light",
+                "rarity": "Ultimate",
+                "source": "Research",
+                "details": "While most of Albion's Scout Rifles use .318 Magnum Rounds, the 'Wave of Light' uses special .328 Lightning Rounds. The .328 Lightning Round got its name due to the flash of light that appears the moment the firing pin hits the detonator. This light was the reason it could not be used for night operations, despite its high lethality. They simply could not risk being detected by the enemy.",
+                "category": ["Weapons", 'Ultimate Weapons']
+            },
+            {
+        "name": "Action and Reaction",
+        "rarity": "Rare",
+        "details": "Firearm ATK +x%, Recoil +x%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Adventurer",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Rate +5%, Weak Point Damage +2%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Aiming Compensation",
+        "rarity": "Rare",
+        "details": "Accuracy +8%, Firearm Critical Hit Damage +4%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Anti-Matter Round",
+        "rarity": "Rare",
+        "details": "Firearm ATK +8%, Firearm Critical Hit Damage +4%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Better Concentration",
+        "rarity": "Standard",
+        "details": "Firearm Critical Hit Damage +8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Better Insight",
+        "rarity": "Standard",
+        "details": "Firearm Critical Hit Rate +9%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Better Weapon Weight",
+        "rarity": "Standard",
+        "details": "Weapon Change Speed +6%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Better Weapon Weight",
+        "rarity": "Ultimate",
+        "details": "Weapon Change Speed +25% When changing weapons, DEF +32% for 5s (cooldown 15s)",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Bullet Rain",
+        "rarity": "Rare",
+        "details": "Fire Rate +8%. Firearm ATK +1%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Chill Enhancement",
+        "rarity": "Standard",
+        "details": "Adds Chill ATK equal to 8% of Firearm ATK",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Chill Priority",
+        "rarity": "Rare",
+        "details": "Chill ATK +13%, Reload Time Modifier -8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Colon Special Forces",
+        "rarity": "Standard",
+        "details": "5% Movement Speed When Aiming",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Commando Marksmanship",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Damage +5%, Firearm ATK +1%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Concentrate Support Ammo",
+        "rarity": "Rare",
+        "details": "Rounds per Magazine +8%, Firearm Critical Hit Damage +4%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Concentrated Fire",
+        "rarity": "Rare",
+        "details": "Weak Point Damage +5%, Firearm Critical Hit Damage +4%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Concentration Priority",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Damage +8%, Reload Time Modifier -8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Concentration Stabilizer",
+        "rarity": "Rare",
+        "details": "Recoil -8%, Firearm Critical Hit Damage +4%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Consume Magazines",
+        "rarity": "Rare",
+        "details": "Reload Time Modifier +6%. Weak Point Damage +2%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Deadeye",
+        "rarity": "Rare",
+        "details": "Accuracy +8%, Firearm ATK +1%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Defense Master",
+        "rarity": "Ultimate",
+        "details": "When defeating an enemy, DEF +128.3% for 10s (Cooldown 25s)",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Dopaminergic Activate",
+        "rarity": "Ultimate",
+        "details": "On Weak Point hit, Firearm Critical Hit Rate +8%, Firearm Critical Hit Damage +12% (Cooldown 15s)",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Edging Shot",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Rate +8%, Firearm ATK -4%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Electric Conductor",
+        "rarity": "Ultimate",
+        "details": "When attacking enemies inflicted with Electrocution, Firearm ATK +8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Electric Enhancement",
+        "rarity": "Standard",
+        "details": "Adds Electric ATK equal to 8% of Firearm ATK",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Electric Gunbarrel",
+        "rarity": "Rare",
+        "details": "Electric ATK +28%, Fire Rate -6%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Electric Priority",
+        "rarity": "Rare",
+        "details": "Electric ATK +13%, Reload Time Modifier -8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Expand Impact Magazine",
+        "rarity": "Standard",
+        "details": "Max Impact Rounds +13%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Expand Weapon Charge",
+        "rarity": "Standard",
+        "details": "Rounds per Magazine +12%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fatal Critical",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Damage +5%, Firearm Critical Hit Rate +1.5%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Conductor",
+        "rarity": "Ultimate",
+        "details": "When attacking enemies inflicted with Burn, Firearm ATK +8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Enhancement",
+        "rarity": "Standard",
+        "details": "Adds Fire ATK equal to 8% of Firearm ATK",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Priority",
+        "rarity": "Rare",
+        "details": "Fire ATK +13%, Reload Time Modifier -8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Rate Concentration",
+        "rarity": "Rare",
+        "details": "Fire Rate +8%, Firearm Critical Hit Damage +4%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Rate Insight",
+        "rarity": "Rare",
+        "details": "Fire Rate +8%, Firearm Critical Hit Rate +1.5%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Rate UP",
+        "rarity": "Standard",
+        "details": "Fire Rate +6%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fixed Shot",
+        "rarity": "Rare",
+        "details": "Recoil -8%, Weak Point Damage +2%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "General Round Projectile Modification",
+        "rarity": "Standard",
+        "details": "When acquiring dropped General Rounds, change to 1 Impact Round for every 100 Rounds.",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Hardline Suppression",
+        "rarity": "Ultimate",
+        "details": "On Weak Point hit, 18% Chance to Knockdown target",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Have Aiming",
+        "rarity": "Rare",
+        "details": "Weak Point Strike",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Hawk-Eye",
+        "rarity": "Standard",
+        "details": "Accuracy +11%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Heat Incinerator",
+        "rarity": "Ultimate",
+        "details": "When defeating an enemy inflicted with Burn, inflicts Burn on other enemies within 3 m of the target for 5s (Cooldown 20s)",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Hit Rate Insight",
+        "rarity": "Rare",
+        "details": "Accuracy +8%, Firearm Critical Hit Rate +1.5%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Impact Rounds Compulsive",
+        "rarity": "Rare",
+        "details": "Max Impact Rounds +15%, Movement Speed -5%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Insight Concentration",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Rate +5%, Firearm Critical Hit Damage +4%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Insight Stabilizer",
+        "rarity": "Rare",
+        "details": "Recoil -8%, Firearm Critical hit Rate +1.5%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Insight Support Ammo",
+        "rarity": "Rare",
+        "details": "Rounds per Magazine +8%, Firearm Critical Hit Rate +1.5%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Lethal Finish",
+        "rarity": "Ultimate",
+        "details": "When firing a firearm, ammo with an additional 30% Critical Hit Rate are fired (Cooldown 15s). When defeating an enemy with the additional attack, module cooldown is -10s. However, the firearm's base Weak Point Damage is fixed at 100%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Magazine Compulsive",
+        "rarity": "Rare",
+        "details": "Rounds per Magazine +10%, Weak Point Damage -3%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Marksman",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Rate +5%, Firearm ATK +1%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Maximize Weight Balance",
+        "rarity": "Rare",
+        "details": "Rounds Per Magazine +8%, Weak Point Damage +2%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Mental Focus",
+        "rarity": "Ultimate",
+        "details": "Base Fire Rate -10%. When firing a firearm, Firearm ATK +0.8% for 2s (up to 30 stacks). Removes effect when reloading or changing firearm",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Payout",
+        "rarity": "Ultimate",
+        "details": "When landing a Firearm Weak Point Attack rounds are not consumed for 3s (Cooldown 25s)",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Pinpoint Shot",
+        "rarity": "Rare",
+        "details": "Firearm ATK +8%, Weak Point Damage +2%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Poison Priority",
+        "rarity": "Rare",
+        "details": "Toxic ATK +13%, Reload Time Modifier -8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Quick Freezer",
+        "rarity": "Ultimate",
+        "details": "When defeating an enemy inflicted with Frostbite, inflicts Frostbite on other enemies within 3m of the target for 0.8s (Cooldown 5s)",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Real-Life Fighter",
+        "rarity": "Ultimate",
+        "details": "Base Accuracy -20%. On dealing Weak Point DMG, Firearm ATK +3% for 5s (up to 10 stacks). But loses 2 stacks per failed Weak Point Attack",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Recycling Genius",
+        "rarity": "Standard",
+        "details": "Reload Time Modifier +8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Refrigerate Gunbarrel",
+        "rarity": "Rare",
+        "details": "Chill ATK +28%, Fire Rate -6%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Reload Concentration",
+        "rarity": "Rare",
+        "details": "Reload Time Modifier +6%, Firearm Critical Hit Damage +4%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Reload Expert",
+        "rarity": "Rare",
+        "details": "Reload Time Modifier +6%, Firearm ATK +1%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Reload Insight",
+        "rarity": "Rare",
+        "details": "Reload Time Modifier +6%, Firearm Critical Hit Rate +1.5%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Remote Generator",
+        "rarity": "Ultimate",
+        "details": "When defeating an enemy inflicted with Electrocution, inflicts Electrocution on other enemies within 3 m of the target for 3s (Cooldown 20s)",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Rifling Reinforcement",
+        "rarity": "Standard",
+        "details": "Firearm ATK +12%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Sharp Precision Shot",
+        "rarity": "Ultimate",
+        "details": "Base Fire Rate -20%. While Pulling the trigger, Fire Rate +4%, Recoil -5%, and Firearm ATK",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Sharpshooter",
+        "rarity": "Rare",
+        "details": "Firearm ATK +8%, Firearm Critical Hit Rate +1.5%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Slow Art",
+        "rarity": "Rare",
+        "details": "Firearm ATK +16, Fire Rate -6%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Snowflake Conductor",
+        "rarity": "Ultimate",
+        "details": "When attacking enemies inflicted with Frostbite, Firearm ATK +8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Special Round Projectile Modification",
+        "rarity": "Standard",
+        "details": "When acquiring dropped Special Rounds, change to 1 Impact Round for every 60 Rounds.",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Special Sight",
+        "rarity": "Ultimate",
+        "details": "Movement Speed When Aiming -8%, Weak Point Damage When Aiming 8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Stance Stabilizer",
+        "rarity": "Rare",
+        "details": "Recoil -8%, Firearm ATK +1%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Superheat Gunbarrel",
+        "rarity": "Rare",
+        "details": "Fire ATK +28%. Fire Rate-6%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Target Detection",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Damage +5%, Weak Point Damage +2%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+                {
+        "name": "Toxic Conductor",
+        "rarity": "Ultimate",
+        "details": "When attacking enemies inflicted with Poison, Firearm ATK +8%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Toxic Enhancement",
+        "rarity": "Standard",
+        "details": "Adds Toxic ATK equal to 8% of Firearm ATK",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Toxic Gunbarrel",
+        "rarity": "Rare",
+        "details": "Toxic ATK +28%, Fire Rate -6%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Venom Injector",
+        "rarity": "Ultimate",
+        "details": "When defeating an enemy inflicted with Poison, inflicts Poison on other enemies within 3 m of the target for 5s (Cooldown 20s)",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Vibration Absorption",
+        "rarity": "Standard",
+        "details": "Recoil -11%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Aiming",
+        "rarity": "Rare",
+        "details": "Accuracy +8%, Weak Point Damage +2%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Detection",
+        "rarity": "Rare",
+        "details": "Weak Point Damage +5%, Firearm ATK +1%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Expansion",
+        "rarity": "Ultimate",
+        "details": "On Weak Point Damage +35% (cooldown 15s)",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Insight",
+        "rarity": "Rare",
+        "details": "Weak Point Damage +5%, Firearm Critical Hit Rate +1.5%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Quick Fire",
+        "rarity": "Rare",
+        "details": "Fire Rate +8%, Weak Point Damage =2%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Sight",
+        "rarity": "Standard",
+        "details": "Weak Point Damage +9%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weapon Tuning",
+        "rarity": "Rare",
+        "details": "Rounds per Magazine +8%, Firearm ATK +1%",
+        "category": ["Impact Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Action and Reaction",
+        "rarity": "Rare",
+        "details": "Firearm ATK +x%, Recoil +x%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Adventurer",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Rate +5%, Weak Point Damage +2%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Aiming Compensation",
+        "rarity": "Rare",
+        "details": "Accuracy +8%, Firearm Critical Hit Damage +4%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Anti-Matter Round",
+        "rarity": "Rare",
+        "details": "Firearm ATK +8%, Firearm Critical Hit Damage +4%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Better Concentration",
+        "rarity": "Standard",
+        "details": "Firearm Critical Hit Damage +8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Better Insight",
+        "rarity": "Standard",
+        "details": "Firearm Critical Hit Rate +9%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Better Weapon Weight",
+        "rarity": "Standard",
+        "details": "Weapon Change Speed +6%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Better Weapon Weight",
+        "rarity": "Ultimate",
+        "details": "Weapon Change Speed +25% When changing weapons, DEF +32% for 5s (cooldown 15s)",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Bullet Rain",
+        "rarity": "Rare",
+        "details": "Fire Rate +8%. Firearm ATK +1%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Chill Enhancement",
+        "rarity": "Standard",
+        "details": "Adds Chill ATK equal to 8% of Firearm ATK",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Chill Priority",
+        "rarity": "Rare",
+        "details": "Chill ATK +13%, Reload Time Modifier -8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Colon Special Forces",
+        "rarity": "Standard",
+        "details": "5% Movement Speed When Aiming",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Commando Marksmanship",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Damage +5%, Firearm ATK +1%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Concentrate Support Ammo",
+        "rarity": "Rare",
+        "details": "Rounds per Magazine +8%, Firearm Critical Hit Damage +4%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Concentrated Fire",
+        "rarity": "Rare",
+        "details": "Weak Point Damage +5%, Firearm Critical Hit Damage +4%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Concentration Priority",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Damage +8%, Reload Time Modifier -8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Concentration Stabilizer",
+        "rarity": "Rare",
+        "details": "Recoil -8%, Firearm Critical Hit Damage +4%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Consume Magazines",
+        "rarity": "Rare",
+        "details": "Reload Time Modifier +6%. Weak Point Damage +2%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Deadeye",
+        "rarity": "Rare",
+        "details": "Accuracy +8%, Firearm ATK +1%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Defense Master",
+        "rarity": "Ultimate",
+        "details": "When defeating an enemy, DEF +128.3% for 10s (Cooldown 25s)",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Dopaminergic Activate",
+        "rarity": "Ultimate",
+        "details": "On Weak Point hit, Firearm Critical Hit Rate +8%, Firearm Critical Hit Damage +12% (Cooldown 15s)",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Edging Shot",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Rate +8%, Firearm ATK -4%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Electric Conductor",
+        "rarity": "Ultimate",
+        "details": "When attacking enemies inflicted with Electrocution, Firearm ATK +8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Electric Enhancement",
+        "rarity": "Standard",
+        "details": "Adds Electric ATK equal to 8% of Firearm ATK",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Electric Gunbarrel",
+        "rarity": "Rare",
+        "details": "Electric ATK +28%, Fire Rate -6%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Electric Priority",
+        "rarity": "Rare",
+        "details": "Electric ATK +13%, Reload Time Modifier -8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Expand Impact Magazine",
+        "rarity": "Standard",
+        "details": "Max Impact Rounds +13%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Expand Weapon Charge",
+        "rarity": "Standard",
+        "details": "Rounds per Magazine +12%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fatal Critical",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Damage +5%, Firearm Critical Hit Rate +1.5%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Conductor",
+        "rarity": "Ultimate",
+        "details": "When attacking enemies inflicted with Burn, Firearm ATK +8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Enhancement",
+        "rarity": "Standard",
+        "details": "Adds Fire ATK equal to 8% of Firearm ATK",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Priority",
+        "rarity": "Rare",
+        "details": "Fire ATK +13%, Reload Time Modifire -8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Rate Concentration",
+        "rarity": "Rare",
+        "details": "Fire Rate +8%, Firearm Critical Hit Damage +4%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Rate Insight",
+        "rarity": "Rare",
+        "details": "Fire Rate +8%, Firearm Critical Hit Rate +1.5%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fire Rate UP",
+        "rarity": "Standard",
+        "details": "Fire Rate +6%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Fixed Shot",
+        "rarity": "Rare",
+        "details": "Recoil -8%, Weak Point Damage +2%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "General Round Projectile Modification",
+        "rarity": "Standard",
+        "details": "When acquiring dropped General Rounds, change to 1 Impact Round for every 100 Rounds.",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Hardline Suppression",
+        "rarity": "Ultimate",
+        "details": "On Weak Point hit, 18% Chance to Knockdown target",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Have Aiming",
+        "rarity": "Rare",
+        "details": "Weak Point Strike",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Hawk-Eye",
+        "rarity": "Standard",
+        "details": "Accuracy +11%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Heat Incinerator",
+        "rarity": "Ultimate",
+        "details": "When defeating an enemy inflicted with Burn, inflicts Burn on other enemies within 3 m of the target for 5s (Cooldown 20s)",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Hit Rate Insight",
+        "rarity": "Rare",
+        "details": "Accuracy +8%, Firearm Critical Hit Rate +1.5%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Impact Rounds Compulsive",
+        "rarity": "Rare",
+        "details": "Max Impact Rounds +15%, Movement Speed -5%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Insight Concentration",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Rate +5%, Firearm Critical Hit Damage +4%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Insight Stabilizer",
+        "rarity": "Rare",
+        "details": "Recoil -8%, Firearm Critical Hit Rate +1.5%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Insight Support Ammo",
+        "rarity": "Rare",
+        "details": "Rounds per Magazine +8%, Firearm Critical Hit Rate +1.5%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Lethal Finish",
+        "rarity": "Ultimate",
+        "details": "When firing a firearm, ammo with an additional 30% Critical Hit Rate are fired (Cooldown 15s). When defeating an enemy with the additional attack, module cooldown is -10s. However, the firearm's base Weak Point Damage is fixed at 100%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Magazine Compulsive",
+        "rarity": "Rare",
+        "details": "Rounds per Magazine +10%, Weak Point Damage -3%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Marksman",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Rate +5%, Firearm ATK +1%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Maximize Weight Balance",
+        "rarity": "Rare",
+        "details": "Rounds Per Magazine +8%, Weak Point Damage +2%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Mental Focus",
+        "rarity": "Ultimate",
+        "details": "Base Fire Rate -10%. When firing a firearm, Firearm ATK +0.8% for 2s (up to 30 stacks). Removes effect when reloading or changing firearm",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Payout",
+        "rarity": "Ultimate",
+        "details": "When landing a Firearm Weak Point Attack rounds are not consumed for 3s (Cooldown 25s)",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Pinpoint Shot",
+        "rarity": "Rare",
+        "details": "Firearm ATK +8%, Weak Point Damage +2%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Poison Priority",
+        "rarity": "Rare",
+        "details": "Toxic ATK +13%, Reload Time Modifier -8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Quick Freezer",
+        "rarity": "Ultimate",
+        "details": "When defeating an enemy inflicted with Frostbite, inflicts Frostbite on other enemies within 3m of the target for 0.8s (Cooldown 5s)",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Real-Life Fighter",
+        "rarity": "Ultimate",
+        "details": "Base Accuracy -20%. On dealing Weak Point DMG, Firearm ATK +3% for 5s (up to 10 stacks). But loses 2 stacks per failed Weak Point Attack",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Recycling Genius",
+        "rarity": "Standard",
+        "details": "Reload Time Modifier +8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Refrigerate Gunbarrel",
+        "rarity": "Rare",
+        "details": "Chill ATK +28%, Fire Rate -6%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Reload Concentration",
+        "rarity": "Rare",
+        "details": "Reload Time Modifier +6%, Firearm Critical Hit Damage +4%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Reload Expert",
+        "rarity": "Rare",
+        "details": "Reload Time Modifier +6%, Firearm ATK +1%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Reload Insight",
+        "rarity": "Rare",
+        "details": "Reload Time Modifier +6%, Firearm Critical Hit Rate +1.5%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Remote Generator",
+        "rarity": "Ultimate",
+        "details": "When defeating an enemy inflicted with Electrocution, inflicts Electrocution on other enemies within 3 m of the target for 3s (Cooldown 20s)",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Rifling Reinforcement",
+        "rarity": "Standard",
+        "details": "Firearm ATK +12%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Sharp Precision Shot",
+        "rarity": "Ultimate",
+        "details": "Base Fire Rate -20%. While Pulling the trigger, Fire Rate +4%, Recoil -5%, and Firearm ATK",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Sharpshooter",
+        "rarity": "Rare",
+        "details": "Firearm ATK +8%, Firearm Critical Hit Rate +1.5%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Slow Art",
+        "rarity": "Rare",
+        "details": "Firearm ATK +16, Fire Rate -6%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Snowflake Conductor",
+        "rarity": "Ultimate",
+        "details": "When attacking enemies inflicted with Frostbite, Firearm ATK +8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Special Round Projectile Modification",
+        "rarity": "Standard",
+        "details": "When acquiring dropped Special Rounds, change to 1 Impact Round for every 60 Rounds.",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Special Sight",
+        "rarity": "Ultimate",
+        "details": "Movement Speed When Aiming -8%, Weak Point Damage When Aiming 8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Stance Stabilizer",
+        "rarity": "Rare",
+        "details": "Recoil -8%, Firearm ATK +1%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Superheat Gunbarrel",
+        "rarity": "Rare",
+        "details": "Fire ATK +28%. Fire Rate-6%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Target Detection",
+        "rarity": "Rare",
+        "details": "Firearm Critical Hit Damage +5%, Weak Point Damage +2%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "TestModuleMulti",
+        "rarity": "Transcendent",
+        "details": "Rounds per Magazine +8%, Firearm Critical Hit Damage +4%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Toxic Conductor",
+        "rarity": "Ultimate",
+        "details": "When attacking enemies inflicted with Poison, Firearm ATK +8%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Toxic Enhancement",
+        "rarity": "Standard",
+        "details": "Adds Toxic ATK equal to 8% of Firearm ATK",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Toxic Gunbarrel",
+        "rarity": "Rare",
+        "details": "Toxic ATK +28%, Fire Rate -6%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Venom Injector",
+        "rarity": "Ultimate",
+        "details": "When defeating an enemy inflicted with Poison, inflicts Poison on other enemies within 3 m of the target for 5s (Cooldown 20s)",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Vibration Absorption",
+        "rarity": "Standard",
+        "details": "Recoil -11%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Aiming",
+        "rarity": "Rare",
+        "details": "Accuracy +8%, Weak Point Damage +2%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Detection",
+        "rarity": "Rare",
+        "details": "Weak Point Damage +5%, Firearm ATK +1%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Expansion",
+        "rarity": "Ultimate",
+        "details": "On Weak Point Damage +35% (cooldown 15s)",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Insight",
+        "rarity": "Rare",
+        "details": "Weak Point Damage +5%, Firearm Critical Hit Rate +1.5%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Quick Fire",
+        "rarity": "Rare",
+        "details": "Fire Rate +8%, Weak Point Damage =2%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weak Point Sight",
+        "rarity": "Standard",
+        "details": "Weak Point Damage +9%",
+        "category": ["General Rounds Modules", "All Modules"]
+    },
+    {
+        "name": "Weapon Tuning",
+        "rarity": "Rare",
+        "details": "Rounds per Magazine +8%, Firearm ATK +1%",
+        "category": ["General Rounds Modules", "All Modules"]
+    }
+
+            // Add more test data items as needed
+        ];
+
+        // Function to populate table with filtered data
+        function populateTable(data) {
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.rarity}</td>
+                    <td>${item.source}</td>
+                    <td>${item.details}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Initial display (showing all materials)
+        populateTable(testData);
+
+        // Function to filter data by selected category
+        function filterByCategory() {
+            const selectedCategory = document.getElementById('category-select').value;
+            let filteredData = [];
+
+            if (selectedCategory === 'All Materials/Items') {
+                filteredData = testData;
+            } else {
+                filteredData = testData.filter(item => item.category.includes(selectedCategory));
+            }
+
+            populateTable(filteredData);
+        }
+    </script>
+</body>
+</html>
